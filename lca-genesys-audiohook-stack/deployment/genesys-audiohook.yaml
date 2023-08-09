@@ -20,6 +20,32 @@ Description: Amazon Transcribe Live Call Analytics with Agent Assist - Genesys A
 
 Parameters:
 
+  TranscribingVPC:
+    Type: String
+    Default: vpc-0c0df94516a75badc
+    Description: Tranzact Dev VPC
+
+  TranscribingVPCPrivateSubnet1Subnet:
+    Type: String
+    Default: subnet-047393c42d4664b81
+    Description: Tranzact Dev Private Subnet 1
+
+  
+  TranscribingVPCPrivateSubnet2Subnet:
+    Type: String
+    Default: subnet-0c4c898b0e4adc280
+    Description: Tranzact Dev Private Subnet 2
+    
+  TranscribingVPCPublicSubnet1Subnet:
+    Type: String
+    Default: subnet-0aba3cd558cc35b5e
+    Description: Tranzact Dev Public Subnet 1
+    
+  TranscribingVPCPublicSubnet2Subnet:
+    Type: String
+    Default: subnet-048401cb07a62036c
+    Description: Tranzact Dev Public Subnet 2
+
   S3BucketName:
     Type: String
     Description: >
@@ -582,265 +608,265 @@ Resources:
   ##########################################################################
   # VPC
   ##########################################################################
-  TranscribingVPC:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.0.0.0/16
-      EnableDnsHostnames: true
-      EnableDnsSupport: true
-      InstanceTenancy: default
+  # TranscribingVPC:
+  #   Type: AWS::EC2::VPC
+  #   Properties:
+  #     CidrBlock: 10.0.0.0/16
+  #     EnableDnsHostnames: true
+  #     EnableDnsSupport: true
+  #     InstanceTenancy: default
 
-  TranscribingVPCIGW:
-    Type: AWS::EC2::InternetGateway
+  # TranscribingVPCIGW:
+  #   Type: AWS::EC2::InternetGateway
 
-  TranscribingVPCVPCGW:
-    Type: AWS::EC2::VPCGatewayAttachment
-    Properties:
-      VpcId:
-        Ref: TranscribingVPC
-      InternetGatewayId:
-        Ref: TranscribingVPCIGW
+  # TranscribingVPCVPCGW:
+  #   Type: AWS::EC2::VPCGatewayAttachment
+  #   Properties:
+  #     VpcId:
+  #       Ref: TranscribingVPC
+  #     InternetGatewayId:
+  #       Ref: TranscribingVPCIGW
 
-  VPCFlowLogsLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 3653
-    Metadata:
-      cfn_nag:
-        rules_to_suppress:
-          - id: W84
-            reason: >-
-              By default CloudWatchLogs LogGroups data is encrypted using the CloudWatch
-              server-side encryption keys (AWS Managed Keys).
-  VPCFlowLogsRole:
-    Type: AWS::IAM::Role
-    Metadata:
-      cfn_nag:
-        rules_to_suppress:
-          - id: W11
-            reason: >-
-              "Allow Resource * for CloudWatch Logs API since the resources are customer defined."
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - vpc-flow-logs.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-      Policies:
-        - PolicyName: LogRolePolicy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:DescribeLogGroups
-                  - logs:DescribeLogStreams
-                  - logs:PutLogEvents
-                Resource: "*"
-  VPCFlowLog:
-    Type: AWS::EC2::FlowLog
-    Properties:
-      DeliverLogsPermissionArn: !GetAtt "VPCFlowLogsRole.Arn"
-      LogGroupName: !Ref "VPCFlowLogsLogGroup"
-      ResourceId: !Ref "TranscribingVPC"
-      ResourceType: VPC
-      TrafficType: ALL
+  # VPCFlowLogsLogGroup:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties:
+  #     RetentionInDays: 3653
+  #   Metadata:
+  #     cfn_nag:
+  #       rules_to_suppress:
+  #         - id: W84
+  #           reason: >-
+  #             By default CloudWatchLogs LogGroups data is encrypted using the CloudWatch
+  #             server-side encryption keys (AWS Managed Keys).
+  # VPCFlowLogsRole:
+  #   Type: AWS::IAM::Role
+  #   Metadata:
+  #     cfn_nag:
+  #       rules_to_suppress:
+  #         - id: W11
+  #           reason: >-
+  #             "Allow Resource * for CloudWatch Logs API since the resources are customer defined."
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - vpc-flow-logs.amazonaws.com
+  #           Action:
+  #             - sts:AssumeRole
+  #     Path: /
+  #     Policies:
+  #       - PolicyName: LogRolePolicy
+  #         PolicyDocument:
+  #           Version: "2012-10-17"
+  #           Statement:
+  #             - Effect: Allow
+  #               Action:
+  #                 - logs:CreateLogGroup
+  #                 - logs:CreateLogStream
+  #                 - logs:DescribeLogGroups
+  #                 - logs:DescribeLogStreams
+  #                 - logs:PutLogEvents
+  #               Resource: "*"
+  # VPCFlowLog:
+  #   Type: AWS::EC2::FlowLog
+  #   Properties:
+  #     DeliverLogsPermissionArn: !GetAtt "VPCFlowLogsRole.Arn"
+  #     LogGroupName: !Ref "VPCFlowLogsLogGroup"
+  #     ResourceId: !Ref "TranscribingVPC"
+  #     ResourceType: VPC
+  #     TrafficType: ALL
 
-  TranscribingVPCPublicSubnet1Subnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.0.0.0/18
-      VpcId:
-        Ref: TranscribingVPC
-      AvailabilityZone:
-        Fn::Select:
-          - 0
-          - Fn::GetAZs: ""
-      MapPublicIpOnLaunch: true
-    DependsOn:
-      - TranscribingVPCVPCGW
+  # TranscribingVPCPublicSubnet1Subnet:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     CidrBlock: 10.0.0.0/18
+  #     VpcId:
+  #       Ref: TranscribingVPC
+  #     AvailabilityZone:
+  #       Fn::Select:
+  #         - 0
+  #         - Fn::GetAZs: ""
+  #     MapPublicIpOnLaunch: true
+  #   DependsOn:
+  #     - TranscribingVPCVPCGW
     
-    Metadata:
-      cfn_nag:
-        rules_to_suppress:
-          - id: W33
-            reason: Public IP on launch is needed by the solution
+  #   Metadata:
+  #     cfn_nag:
+  #       rules_to_suppress:
+  #         - id: W33
+  #           reason: Public IP on launch is needed by the solution
 
-  TranscribingVPCPublicSubnet1RouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId:
-        Ref: TranscribingVPC
+  # TranscribingVPCPublicSubnet1RouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId:
+  #       Ref: TranscribingVPC
     
-  TranscribingVPCPublicSubnet1RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId:
-        Ref: TranscribingVPCPublicSubnet1RouteTable
-      SubnetId:
-        Ref: TranscribingVPCPublicSubnet1Subnet
+  # TranscribingVPCPublicSubnet1RouteTableAssociation:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     RouteTableId:
+  #       Ref: TranscribingVPCPublicSubnet1RouteTable
+  #     SubnetId:
+  #       Ref: TranscribingVPCPublicSubnet1Subnet
 
-  TranscribingVPCPublicSubnet1DefaultRoute:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId:
-        Ref: TranscribingVPCPublicSubnet1RouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId:
-        Ref: TranscribingVPCIGW
-    DependsOn:
-      - TranscribingVPCVPCGW
+  # TranscribingVPCPublicSubnet1DefaultRoute:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId:
+  #       Ref: TranscribingVPCPublicSubnet1RouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     GatewayId:
+  #       Ref: TranscribingVPCIGW
+  #   DependsOn:
+  #     - TranscribingVPCVPCGW
 
-  TranscribingVPCPublicSubnet:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
+  # TranscribingVPCPublicSubnet:
+  #   Type: AWS::EC2::EIP
+  #   Properties:
+  #     Domain: vpc
 
-  TranscribingVPCPublicSubnet1NATGateway:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId:
-        Fn::GetAtt:
-          - TranscribingVPCPublicSubnet
-          - AllocationId
-      SubnetId:
-        Ref: TranscribingVPCPublicSubnet1Subnet
+  # TranscribingVPCPublicSubnet1NATGateway:
+  #   Type: AWS::EC2::NatGateway
+  #   Properties:
+  #     AllocationId:
+  #       Fn::GetAtt:
+  #         - TranscribingVPCPublicSubnet
+  #         - AllocationId
+  #     SubnetId:
+  #       Ref: TranscribingVPCPublicSubnet1Subnet
 
-  TranscribingVPCPublicSubnet2Subnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.0.64.0/18
-      VpcId:
-        Ref: TranscribingVPC
-      AvailabilityZone:
-        Fn::Select:
-          - 1
-          - Fn::GetAZs: ""
-      MapPublicIpOnLaunch: true
-    DependsOn:
-      - TranscribingVPCVPCGW
-    Metadata:
-      cfn_nag:
-        rules_to_suppress:
-          - id: W33
-            reason: Public IP on launch is needed by the solution
+  # TranscribingVPCPublicSubnet2Subnet:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     CidrBlock: 10.0.64.0/18
+  #     VpcId:
+  #       Ref: TranscribingVPC
+  #     AvailabilityZone:
+  #       Fn::Select:
+  #         - 1
+  #         - Fn::GetAZs: ""
+  #     MapPublicIpOnLaunch: true
+  #   DependsOn:
+  #     - TranscribingVPCVPCGW
+  #   Metadata:
+  #     cfn_nag:
+  #       rules_to_suppress:
+  #         - id: W33
+  #           reason: Public IP on launch is needed by the solution
 
-  TranscribingVPCPublicSubnet2RouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId:
-        Ref: TranscribingVPC
+  # TranscribingVPCPublicSubnet2RouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId:
+  #       Ref: TranscribingVPC
 
-  TranscribingVPCPublicSubnet2RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId:
-        Ref: TranscribingVPCPublicSubnet2RouteTable
-      SubnetId:
-        Ref: TranscribingVPCPublicSubnet2Subnet
+  # TranscribingVPCPublicSubnet2RouteTableAssociation:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     RouteTableId:
+  #       Ref: TranscribingVPCPublicSubnet2RouteTable
+  #     SubnetId:
+  #       Ref: TranscribingVPCPublicSubnet2Subnet
 
-  TranscribingVPCPublicSubnet2DefaultRoute:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId:
-        Ref: TranscribingVPCPublicSubnet2RouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      GatewayId:
-        Ref: TranscribingVPCIGW
-    DependsOn:
-      - TranscribingVPCVPCGW
+  # TranscribingVPCPublicSubnet2DefaultRoute:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId:
+  #       Ref: TranscribingVPCPublicSubnet2RouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     GatewayId:
+  #       Ref: TranscribingVPCIGW
+  #   DependsOn:
+  #     - TranscribingVPCVPCGW
 
-  TranscribingVPCPublicSubnet2:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
+  # TranscribingVPCPublicSubnet2:
+  #   Type: AWS::EC2::EIP
+  #   Properties:
+  #     Domain: vpc
 
-  TranscribingVPCPublicSubnet2NATGateway:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId:
-        Fn::GetAtt:
-          - TranscribingVPCPublicSubnet2
-          - AllocationId
-      SubnetId:
-        Ref: TranscribingVPCPublicSubnet2Subnet
+  # TranscribingVPCPublicSubnet2NATGateway:
+  #   Type: AWS::EC2::NatGateway
+  #   Properties:
+  #     AllocationId:
+  #       Fn::GetAtt:
+  #         - TranscribingVPCPublicSubnet2
+  #         - AllocationId
+  #     SubnetId:
+  #       Ref: TranscribingVPCPublicSubnet2Subnet
 
-  TranscribingVPCPrivateSubnet1Subnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.0.128.0/18
-      VpcId:
-        Ref: TranscribingVPC
-      AvailabilityZone:
-        Fn::Select:
-          - 0
-          - Fn::GetAZs: ""
-      MapPublicIpOnLaunch: false
+  # TranscribingVPCPrivateSubnet1Subnet:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     CidrBlock: 10.0.128.0/18
+  #     VpcId:
+  #       Ref: TranscribingVPC
+  #     AvailabilityZone:
+  #       Fn::Select:
+  #         - 0
+  #         - Fn::GetAZs: ""
+  #     MapPublicIpOnLaunch: false
 
-  TranscribingVPCPrivateSubnet1RouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId:
-        Ref: TranscribingVPC
+  # TranscribingVPCPrivateSubnet1RouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId:
+  #       Ref: TranscribingVPC
 
-  TranscribingVPCPrivateSubnet1RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId:
-        Ref: TranscribingVPCPrivateSubnet1RouteTable
-      SubnetId:
-        Ref: TranscribingVPCPrivateSubnet1Subnet
+  # TranscribingVPCPrivateSubnet1RouteTableAssociation:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     RouteTableId:
+  #       Ref: TranscribingVPCPrivateSubnet1RouteTable
+  #     SubnetId:
+  #       Ref: TranscribingVPCPrivateSubnet1Subnet
 
-  TranscribingVPCPrivateSubnet1DefaultRoute:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId:
-        Ref: TranscribingVPCPrivateSubnet1RouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId:
-        Ref: TranscribingVPCPublicSubnet1NATGateway
+  # TranscribingVPCPrivateSubnet1DefaultRoute:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId:
+  #       Ref: TranscribingVPCPrivateSubnet1RouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     NatGatewayId:
+  #       Ref: TranscribingVPCPublicSubnet1NATGateway
 
-  TranscribingVPCPrivateSubnet2Subnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: 10.0.192.0/18
-      VpcId:
-        Ref: TranscribingVPC
-      AvailabilityZone:
-        Fn::Select:
-          - 1
-          - Fn::GetAZs: ""
-      MapPublicIpOnLaunch: false
+  # TranscribingVPCPrivateSubnet2Subnet:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     CidrBlock: 10.0.192.0/18
+  #     VpcId:
+  #       Ref: TranscribingVPC
+  #     AvailabilityZone:
+  #       Fn::Select:
+  #         - 1
+  #         - Fn::GetAZs: ""
+  #     MapPublicIpOnLaunch: false
 
-  TranscribingVPCPrivateSubnet2RouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId:
-        Ref: TranscribingVPC
+  # TranscribingVPCPrivateSubnet2RouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId:
+  #       Ref: TranscribingVPC
 
-  TranscribingVPCPrivateSubnet2RouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId:
-        Ref: TranscribingVPCPrivateSubnet2RouteTable
-      SubnetId:
-        Ref: TranscribingVPCPrivateSubnet2Subnet
+  # TranscribingVPCPrivateSubnet2RouteTableAssociation:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     RouteTableId:
+  #       Ref: TranscribingVPCPrivateSubnet2RouteTable
+  #     SubnetId:
+  #       Ref: TranscribingVPCPrivateSubnet2Subnet
 
-  TranscribingVPCPrivateSubnet2DefaultRoute:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId:
-        Ref: TranscribingVPCPrivateSubnet2RouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId:
-        Ref: TranscribingVPCPublicSubnet2NATGateway
+  # TranscribingVPCPrivateSubnet2DefaultRoute:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId:
+  #       Ref: TranscribingVPCPrivateSubnet2RouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     NatGatewayId:
+  #       Ref: TranscribingVPCPublicSubnet2NATGateway
 
 
 
